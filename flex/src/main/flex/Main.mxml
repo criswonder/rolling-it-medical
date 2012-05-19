@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  GRANITE DATA SERVICES
+  Copyright (C) 2011 GRANITE DATA SERVICES S.A.S.
+
+  This file is part of Granite Data Services.
+
+  Granite Data Services is free software; you can redistribute it and/or modify
+  it under the terms of the GNU Lesser General Public License as published by
+  the Free Software Foundation; either version 3 of the License, or (at your
+  option) any later version.
+
+  Granite Data Services is distributed in the hope that it will be useful, but
+  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
+  for more details.
+
+  You should have received a copy of the GNU Lesser General Public License
+  along with this library; if not, see <http://www.gnu.org/licenses/>.
+-->
+
+<s:Application
+	xmlns:fx="http://ns.adobe.com/mxml/2009"
+	xmlns:s="library://ns.adobe.com/flex/spark"
+	xmlns:mx="library://ns.adobe.com/flex/mx"
+    xmlns:e="com.hongyun.entities.*"
+    xmlns="*"
+    controlBarVisible="true">
+   	
+    <fx:Script>
+        <![CDATA[
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+            
+			/**
+			 * button 点击时调用后台service方法
+			 */
+            private function hello(name:String):void {
+                // if (!fValidator.validate())
+                //     return;
+                welcomeService.hello(name);
+                welcome = new Welcome();
+				welcomeService.getList();
+            }
+            
+            private function onFault(event:FaultEvent):void {
+                lMessage.text = event.fault.faultString;
+            }
+            private function onGetListResult(event:ResultEvent):void {
+				trace(event.result);
+            }
+            private function onDeleteOrUpdateSuccess(event:ResultEvent):void {
+				welcomeService.getList();
+				Alert.show("operate success, well done!");
+            }
+			
+			protected function deleteHandle(event:MouseEvent):void
+			{
+				var obj:Welcome = Welcome(grid.selectedItem);
+				welcomeService.deleteIt(obj);
+				
+			}
+			protected function updateHandle(event:MouseEvent):void
+			{
+				var obj:Welcome = Welcome(grid.selectedItem);
+				welcomeService.updateIt(obj);
+				
+			}
+			
+		]]>
+    </fx:Script>
+    
+    <fx:Declarations>
+        <mx:RemoteObject id="welcomeService" destination="welcomeService" showBusyCursor="true"
+            endpoint="http://\{server.name\}:\{server.port\}/rolling-webapp/graniteamf/amf">
+            <mx:method name="hello" fault="onFault(event)"/>
+            <mx:method name="getList" fault="onFault(event)" result="onGetListResult(event)"/>
+            <mx:method name="deleteIt" fault="onFault(event)" result="onDeleteOrUpdateSuccess(event)"/>
+            <mx:method name="updateIt" fault="onFault(event)" result="onDeleteOrUpdateSuccess(event)"/>
+        </mx:RemoteObject>
+        <!--entity 对象-->
+        <e:Welcome id="welcome"/>
+        
+        <!--v:FormValidator id="fValidator" form="{fHello}" entity="{welcome}"/-->
+    </fx:Declarations>
+
+    <s:controlBarContent>
+        <s:Label text="Sample Application rolling" fontSize="18" fontWeight="bold" width="100%"/>
+    </s:controlBarContent>
+    
+    <s:VGroup paddingLeft="10" paddingRight="10" paddingTop="10" paddingBottom="10">
+        <s:HGroup id="fHello">
+            <s:TextInput id="iName" text="{welcome.name}"/>
+            <s:Button id="bHello" label="Welcome! add one" click="hello(iName.text)"/>
+        </s:HGroup>
+    
+        <s:Label id="lMessage" text="{welcomeService.hello.lastResult.message}"/>
+		<s:Panel title="从数据库里面取的数据：" width="100%" minWidth="200">
+			<s:HGroup id="mlist" paddingRight="10" paddingBottom="10" paddingLeft="10" width="100%">
+				<s:DataGrid id="grid" dataProvider="{ArrayCollection(welcomeService.getList.lastResult)}" 
+							editable="true"
+							width="100%">
+					<s:columns>
+						<s:ArrayList>
+							<s:GridColumn  dataField="name" headerText="name"/>
+							<s:GridColumn  dataField="message" headerText="message" editable="true"/>
+						</s:ArrayList>
+					</s:columns>
+				</s:DataGrid>
+	  		</s:HGroup>
+		</s:Panel>
+		<s:HGroup>
+			<s:Button label="Delete it" click="deleteHandle(event)"/>
+			<s:Button label="Update" click="updateHandle(event)"/>
+		</s:HGroup>
+	</s:VGroup>
+</s:Application>
