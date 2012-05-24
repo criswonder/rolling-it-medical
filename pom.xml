@@ -27,7 +27,7 @@
   
     <properties>
         <flex.framework.version>4.5.1.21328</flex.framework.version>
-        <flexmojos.version>3.9</flexmojos.version>
+        <flexmojos.version>4.0-RC2</flexmojos.version>
     
         <graniteds.version>2.3.0.GA</graniteds.version>
     
